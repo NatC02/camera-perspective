@@ -6,10 +6,11 @@ import * as ThreeManga from 'three-manga';
 import { EffectComposer, Pass, FullScreenQuad } from 'three/examples/jsm/postprocessing/EffectComposer';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass';
 import { KawaseBlurPassGen } from 'three-kawase-blur';
-import { LensFlareEffect } from './LensFlare';
+
+import { LensFlareEffect } from './LensFlare'
 
 /**
- * Base Three Setup
+ * Base Setup
  */
 // Canvas
 const canvas = document.querySelector('canvas.webgl') as HTMLCanvasElement;
@@ -17,9 +18,12 @@ const canvas = document.querySelector('canvas.webgl') as HTMLCanvasElement;
 // Scene
 const scene = new THREE.Scene();
 
+const lensFlareEffect = LensFlareEffect();
+
 // Lighting
 const mangaDirectionalLight = new ThreeManga.MangaDirectionalLight(-2, 2, 2, -2, 1, 5);
 scene.add(mangaDirectionalLight); // Add light to scene
+
 
 // Camera
 const sizes = {
@@ -178,8 +182,6 @@ const applyBlur = () => {
     fx.addPass(myKawaseBlurPass);
   }
 };
-
-const lensFlareEffect = LensFlareEffect();
 
 /**
  * UseState-like Toggle
