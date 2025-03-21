@@ -233,3 +233,65 @@ const removeLensFlare = () => {
   // Remove the lens flare effect from the scene
   scene.remove(lensFlareEffect);
 };
+
+/**
+ * Mouse Interaction
+ */
+let currentIntersect = null;
+const onClick = () => {
+  if (currentIntersect && gltfModel && actions.length > 0) {
+    let object = currentIntersect.object;
+    while (object) {
+      if (object === gltfModel) {
+        console.log('Clicked on GLTF model, toggling animation');
+        toggleAnimation(); // Call toggle function when GLTF model is clicked
+      }
+      object = object.parent;
+    }
+  }
+};
+
+window.addEventListener('click', onClick);
+
+/**
+ * Animation Loop
+ */
+const clock = new THREE.Clock();
+
+const tick = () => {
+  const delta = clock.getDelta();
+
+  controls.update();
+
+  if (mixer) {
+    mixer.update(delta);
+  }
+
+  raycaster.setFromCamera(mouse, camera);
+  const objectsToTest = [];
+  if (gltfModel) {
+    objectsToTest.push(gltfModel);
+  }
+  const intersects = raycaster.intersectObjects(objectsToTest, true);
+
+  if (intersects.length) {
+    if (!currentIntersect) {
+      console.log('Mouse enter');
+    }
+    currentIntersect = intersects[0];
+  } else {
+    if (currentIntersect) {
+      console.log('Mouse leave');
+    }
+    currentIntersect = null;
+  }
+
+  mangaShaderManager.update(); // Ensure manga shader updates every frame
+
+  // Use EffectComposer to render the scene with the blur effect applied
+  fx.render();
+
+  window.requestAnimationFrame(tick);
+};
+
+tick();
