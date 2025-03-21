@@ -57,3 +57,59 @@ const mangaShaderManager = new ThreeManga.MangaShaderManager({
   lightList: [mangaDirectionalLight],
   resolution: new THREE.Vector2(sizes.width, sizes.height),
 });
+
+/**
+ * Kawase Blur Setup
+ */
+// Generate KawaseBlurPass class
+const KawaseBlurPass = KawaseBlurPassGen({ THREE, EffectComposer, Pass, FullScreenQuad });
+
+// Create KawaseBlurPass instance
+const myKawaseBlurPass = new KawaseBlurPass({ renderer, kernels: [0] });
+
+// Add to EffectComposer
+const fx = new EffectComposer(renderer);
+fx.addPass(new RenderPass(scene, camera));
+fx.addPass(myKawaseBlurPass);
+
+// Set the initial blur effect
+myKawaseBlurPass.setKernels([1]); // Set the blur kernels to start with
+
+/**
+ * Load GLTF Model
+ */
+const loader = new GLTFLoader();
+let gltfModel = null;
+let mixer = null;
+let actions = [];
+
+// Modify loader to save original materials
+loader.load('/cam.glb', (gltf) => {
+  gltfModel = gltf.scene;
+  scene.add(gltfModel);
+  scene.background = new THREE.Color('#30323D');
+
+  // Apply Manga Shader Material to Model
+  const material = mangaShaderManager.getMangaMaterial({ outlineThreshold: 0.1 });
+
+  gltfModel.traverse((child) => {
+    if (child.isMesh) {
+      // Store original material for later restoration
+      child.userData.originalMaterial = child.material;
+      child.material = material; // Apply manga shader material
+    }
+  });
+
+  // Lighting Setup
+  mangaDirectionalLight.position.set(2, 2, 2);
+  mangaDirectionalLight.lookAt(gltfModel.position);
+  scene.add(mangaDirectionalLight);
+
+  // Animation Setup
+  if (gltf.animations.length > 0) {
+    mixer = new THREE.AnimationMixer(gltfModel);
+    actions = gltf.animations.map((clip) => mixer.clipAction(clip));
+  }
+}, undefined, (error) => {
+  console.error('Error loading GLTF model:', error);
+});
