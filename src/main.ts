@@ -179,3 +179,57 @@ const applyBlur = () => {
   }
 };
 
+const lensFlareEffect = LensFlareEffect();
+
+/**
+ * UseState-like Toggle
+ */
+let isOpen = false; // Simulating the useState toggle
+const toggleAnimation = () => {
+  if (actions.length > 0) {
+    if (isOpen) {
+      console.log('Closing animation (0 seconds)');
+      applyBlur();
+      applyMangaShaderMaterial();
+      removeLensFlare();
+      actions.forEach(action => {
+        action.reset().play();
+        action.time = 0; // Reset to start (closed state)
+      });
+      mixer.setTime(0);
+    } else {
+      console.log('Opening animation (6.049 seconds)');
+      removeBlur();
+      applyLensFlare();
+      removeMangaShaderMaterial();
+      actions.forEach(action => {
+        action.reset().play();
+        action.time = 0; // Start playing
+      });
+      mixer.setTime(6.049);
+    }
+
+    // Pause the animation at the target time
+    actions.forEach(action => {
+      action.paused = true;
+    });
+
+    // Play sound when animation state toggles
+    sound.play();
+
+    // Toggle state
+    isOpen = !isOpen;
+  }
+};
+
+// Function to apply the lens flare effect to the scene
+const applyLensFlare = () => {  
+  // Add the lens flare effect to the scene
+  scene.add(lensFlareEffect);
+};
+
+// Function to remove the lens flare effect from the scene
+const removeLensFlare = () => {
+  // Remove the lens flare effect from the scene
+  scene.remove(lensFlareEffect);
+};
