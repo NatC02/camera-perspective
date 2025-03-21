@@ -113,3 +113,69 @@ loader.load('/cam.glb', (gltf) => {
 }, undefined, (error) => {
   console.error('Error loading GLTF model:', error);
 });
+
+/**
+ * Resize Handling
+ */
+window.addEventListener('resize', () => {
+  sizes.width = window.innerWidth;
+  sizes.height = window.innerHeight;
+
+  camera.aspect = sizes.width / sizes.height;
+  camera.updateProjectionMatrix();
+
+  renderer.setSize(sizes.width, sizes.height);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+  mangaShaderManager.setResolution(new THREE.Vector2(sizes.width, sizes.height));
+});
+
+/**
+ * Audio setup for animation toggle
+ */
+const sound = new Audio('/focus.mp3'); // Load the sound file
+
+// Function to remove manga shader material
+const removeMangaShaderMaterial = () => {
+  if (gltfModel) {
+    gltfModel.traverse((child) => {
+      if (child.isMesh) {
+        // Restore the original material if available
+        if (child.userData.originalMaterial) {
+          child.material = child.userData.originalMaterial;
+        }
+      }
+    });
+  }
+};
+
+// Function to reapply manga shader material
+const applyMangaShaderMaterial = () => {
+  if (gltfModel) {
+    gltfModel.traverse((child) => {
+      if (child.isMesh) {
+        // Reapply the manga shader material
+        const material = mangaShaderManager.getMangaMaterial({ outlineThreshold: 0.1 });
+        child.material = material;
+      }
+    });
+  }
+};
+
+// Function to remove the blur effect from the scene
+const removeBlur = () => {
+  // Remove the KawaseBlurPass from the EffectComposer's pass list
+  fx.passes = fx.passes.filter(pass => !(pass instanceof KawaseBlurPass));
+
+  // Optionally, you can also reset any blur-related settings or state here if needed.
+};
+
+// Function to apply the blur effect to the scene
+const applyBlur = () => {
+  // Check if the blur pass is already in the passes array to avoid duplicates
+  if (!fx.passes.some(pass => pass instanceof KawaseBlurPass)) {
+    // Add the KawaseBlurPass back to the EffectComposer's passes
+    fx.addPass(myKawaseBlurPass);
+  }
+};
+
